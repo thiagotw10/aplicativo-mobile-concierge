@@ -1,20 +1,24 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import MenuTop from './src/telas/MenuTop';
 import Lista from './src/telas/Lista';
+import Empresas from './src/telas/BuscaEmpresa';
+import Login from './src/telas/Login';
 import React from 'react';
-import api from './src/servicos/axios';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-class App extends React.Component {
-  render(){
+
+const Stack = createNativeStackNavigator();
+
+function App() {
     return (
-      <View style={styles.container}>
-        <MenuTop/>
-        <Lista key={'1'}/>
-        <StatusBar style="auto" />
-      </View>
+      <NavigationContainer>
+        <Stack.Navigator styles={styles.container} initialRouteName="Empresas" >
+          <Stack.Screen options={{headerShown: false}} name="Empresas" component={Empresas} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen options={{headerShown: false}} name="Tarefas" component={Lista} />
+        </Stack.Navigator>
+      </NavigationContainer>
     );
- }
 }
 
 const styles = StyleSheet.create({

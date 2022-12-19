@@ -2,9 +2,12 @@ import React, {useState, useEffect} from "react";
 import { Text, StyleSheet, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons"
 import api from "../servicos/axios";
+import { useRoute } from '@react-navigation/native';
+import MenuTop from "./MenuTop";
+
 
 export default function Lista(){
-
+const route = useRoute()
 const [atividades, setAtividade] = useState('')
 const [total, setTotal] = useState('0')
 const [loading, setLoading] = useState('')
@@ -15,13 +18,14 @@ const [loading, setLoading] = useState('')
 
    async function rodar(){
         setLoading(true)
-        const ativi = await api.get('celular').then(val=> val.data).catch((error)=> error)
+        const ativi = await api.get('celular/'+route.params.id).then(val=> val.data).catch((error)=> error)
         setAtividade(ativi.atividades)
         setTotal(ativi.total)
         setLoading(false)
     }
    
    return <>
+   <MenuTop nome={route.params.nome}/>
     <View style={styles.containerCesta}> 
         <View style={styles.cardMenu}>
             <View>
