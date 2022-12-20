@@ -6,6 +6,7 @@ import { useRoute } from '@react-navigation/native';
 import MenuTop from "./MenuTop";
 
 
+
 export default function Lista(){
 const route = useRoute()
 const [atividades, setAtividade] = useState('')
@@ -13,35 +14,44 @@ const [total, setTotal] = useState('0')
 const [loading, setLoading] = useState('')
 
     useEffect(()=>{
-        rodar()
+        tempoReal()      
     }, [])
 
-   async function rodar(){
-        setLoading(true)
-        const ativi = await api.get('celular/'+route.params.id).then(val=> val.data).catch((error)=> error)
+//    async function rodar(){
+//         setLoading(true)
+//         const ativi = await api.get('celular/'+route.params.id).then(val=> val.data).catch((error)=> error)
+//         setAtividade(ativi.atividades)
+//         setTotal(ativi.total)
+//         setLoading(false)
+//         tempoReal()
+//     }
+   
+    async function tempoReal(){
+        const ativi = await api.get('celular/'+route.params.id).then((val)=>{setTimeout(function () { tempoReal() }, 2000); return val.data;}).catch((error)=> error)
         setAtividade(ativi.atividades)
         setTotal(ativi.total)
-        setLoading(false)
     }
-   
+  
+
    return <>
-   <MenuTop nome={route.params.nome}/>
+   <MenuTop nome={route.params.nome} fundo={route.params.fundo}/>
     <View style={styles.containerCesta}> 
         <View style={styles.cardMenu}>
             <View>
                 <Text style={styles.texto}>Tarefas</Text>
                 <Text><Text style={{fontWeight: 'bold'}}>Total de tarefas:</Text> {total}</Text>
             </View>
-            <TouchableOpacity onPress={rodar}>
-                <Feather name="refresh-cw" size={25} color={'#fff'}/>
+            <TouchableOpacity>
+                <Feather name="database" size={25} color={'#fff'}/>
             </TouchableOpacity>
         </View>
         <View style={styles.cards}>
             <View style={styles.view}>
                 <ScrollView>
-                    {  loading ? <ActivityIndicator size="large" color="#00ff00"/> : atividades != '' ?
+                    {  atividades != '' || atividades != null || atividades != undefined ?
                     
-                        Object.keys(atividades).map((item) => {  
+                        Object.keys(atividades).map((item) => {
+                         let conteudo =  JSON.parse(atividades[item].conteudo)     
                          return <TouchableOpacity key={atividades[item].id} style={[styles.card, {borderColor: atividades[item].cor}]}>
                                 <View style={[styles.fundoIconce, {backgroundColor: atividades[item].cor}]}>
                                     <Feather name="activity" size={30} color={'#fff'}/>
@@ -51,6 +61,7 @@ const [loading, setLoading] = useState('')
                                         <Text style={{fontWeight: 'bold'}}>{atividades[item].status}</Text>
                                     </View>
                                     <Text style={styles.tituloCard}>{atividades[item].nome}</Text>
+                                    <Text style={{fontSize: 10}}>{conteudo.leito}</Text>
                                     <View style={styles.cardData}>
                                         <Text style={styles.textoData}>Data - Hora: </Text>
                                         <Text style={styles.textoDatinha}>{atividades[item].hora}</Text>
@@ -107,7 +118,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
         justifyContent: 'space-between',
         marginBottom: 10,
-        marginTop: 14
+        marginTop: 25
     },
     fundoIconce:{
       backgroundColor: '#80b3ff',
@@ -137,7 +148,7 @@ const styles = StyleSheet.create({
     },
     status:{
         position: 'absolute',
-        top: -30,
+        top: -23,
         right: -5,
         color: 'white',
         backgroundColor: '#77b885',

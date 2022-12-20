@@ -2,9 +2,9 @@ import React from "react";
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons"
 
-export default function MenuTop({nome}){
+export default function MenuTop({nome, fundo}){
    return (
-    <View style={styles.containerCesta}> 
+    <View style={[styles.containerCesta, {backgroundColor: fundo}]}> 
         <Text style={styles.texto}>{nome}</Text>
         <TouchableOpacity style={styles.radiusIcone}>
           <Feather name="user" size={30} color="#fff"/>
