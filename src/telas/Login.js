@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from "../servicos/axios";
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from "@expo/vector-icons"
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 import
   {
     KeyboardAvoidingView,
@@ -15,12 +17,45 @@ import
     Alert,
   } from 'react-native';
 
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+
+
   export default function Login(){
     const navigation = useNavigation();
     const [empresa, setEmpresa] = useState('')
     const [email, setEmail] = useState('')
     const [senha, setSenha] = useState('')
     const route = useRoute();
+
+
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) => { setExpoPushToken(token)});
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
 
    async function enviarLogin(){
@@ -30,9 +65,10 @@ import
 
        await api.post('login/celular/'+empresa,{
             email: email,
-            password: senha
+            password: senha,
+            token: expoPushToken
         }).then((val)=>{
-            navigation.navigate('Tarefas', {id: val.data.empresa_id, nome: val.data.titulo, fundo: val.data.fundo})
+            navigation.navigate('Tarefas', {id: val.data.empresa_id, nome: val.data.titulo, fundo: val.data.fundo, user: val.data.id})
         }).catch((error) =>{ Alert.alert('Email ou senha incorreta.') })
 
     }
@@ -95,7 +131,40 @@ import
               </KeyboardAvoidingView>
             </>
        )
-  }
+    }
+
+
+    async function registerForPushNotificationsAsync() {
+        let token;
+      
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+          });
+        }
+      
+        if (Device.isDevice) {
+          const { status: existingStatus } = await Notifications.getPermissionsAsync();
+          let finalStatus = existingStatus;
+          if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+          }
+          if (finalStatus !== 'granted') {
+            alert('Failed to get push token for push notification!');
+            return;
+          }
+          token = (await Notifications.getExpoPushTokenAsync()).data;
+          console.log('token '+token);
+        } else {
+          alert('Must use physical device for Push Notifications');
+        }
+      
+        return token;
+      }
 
   const styles = StyleSheet.create({
     container: {

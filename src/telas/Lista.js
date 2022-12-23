@@ -1,161 +1,41 @@
 import React, {useState, useEffect} from "react";
-import { Text, StyleSheet, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
-import { Feather } from "@expo/vector-icons"
-import api from "../servicos/axios";
 import { useRoute } from '@react-navigation/native';
-import MenuTop from "./MenuTop";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
+import Abertos from "./Abertos";
+import Historico from "./Historico";
+
 
 
 
 export default function Lista(){
+const Tab = createBottomTabNavigator();
 const route = useRoute()
-const [atividades, setAtividade] = useState('')
-const [total, setTotal] = useState('0')
-const [loading, setLoading] = useState('')
-
-    useEffect(()=>{
-        tempoReal()      
-    }, [])
-
-//    async function rodar(){
-//         setLoading(true)
-//         const ativi = await api.get('celular/'+route.params.id).then(val=> val.data).catch((error)=> error)
-//         setAtividade(ativi.atividades)
-//         setTotal(ativi.total)
-//         setLoading(false)
-//         tempoReal()
-//     }
-   
-    async function tempoReal(){
-        const ativi = await api.get('celular/'+route.params.id).then((val)=>{setTimeout(function () { tempoReal() }, 2000); return val.data;}).catch((error)=> error)
-        setAtividade(ativi.atividades)
-        setTotal(ativi.total)
-    }
-  
 
    return <>
-   <MenuTop nome={route.params.nome} fundo={route.params.fundo}/>
-    <View style={styles.containerCesta}> 
-        <View style={styles.cardMenu}>
-            <View>
-                <Text style={styles.texto}>Tarefas</Text>
-                <Text><Text style={{fontWeight: 'bold'}}>Total de tarefas:</Text> {total}</Text>
-            </View>
-            <TouchableOpacity>
-                <Feather name="database" size={25} color={'#fff'}/>
-            </TouchableOpacity>
-        </View>
-        <View style={styles.cards}>
-            <View style={styles.view}>
-                <ScrollView>
-                    {  atividades != '' || atividades != null || atividades != undefined ?
-                    
-                        Object.keys(atividades).map((item) => {
-                         let conteudo =  JSON.parse(atividades[item].conteudo)     
-                         return <TouchableOpacity key={atividades[item].id} style={[styles.card, {borderColor: atividades[item].cor}]}>
-                                <View style={[styles.fundoIconce, {backgroundColor: atividades[item].cor}]}>
-                                    <Feather name="activity" size={30} color={'#fff'}/>
-                                </View>
-                                <View>
-                                    <View style={[styles.status, {backgroundColor: atividades[item].cor}]}>
-                                        <Text style={{fontWeight: 'bold'}}>{atividades[item].status}</Text>
-                                    </View>
-                                    <Text style={styles.tituloCard}>{atividades[item].nome}</Text>
-                                    <Text style={{fontSize: 10}}>{conteudo.leito}</Text>
-                                    <View style={styles.cardData}>
-                                        <Text style={styles.textoData}>Data - Hora: </Text>
-                                        <Text style={styles.textoDatinha}>{atividades[item].hora}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                          }) : <Text>Nenhuma tarefa encontrada.</Text>
-                    }
-                </ScrollView>
-            </View>
-        </View>
-    </View>
+   <Tab.Navigator
+   screenOptions={({ route }) => ({
+    tabBarIcon: ({ focused, color, size }) => {
+      let iconName;
+
+      if (route.name === 'Abertos') {
+        iconName = focused
+          ? 'book-outline'
+          : 'book-outline';
+      } else if (route.name === 'Historico') {
+        iconName = focused ? 'clipboard-outline' : 'clipboard-outline';
+      }
+
+      // You can return any component that you like here!
+      return <Ionicons name={iconName} size={size} color={color} />;
+    },
+    tabBarActiveTintColor: '#77b885',
+    tabBarInactiveTintColor: 'gray',
+  })}
+   >
+        <Tab.Screen options={{headerShown: false}} name="Abertos" children={() => <Abertos userData={route.params} />} />
+        <Tab.Screen options={{headerShown: false}} name="Historico" children={() => <Historico userData={route.params} />} />
+    </Tab.Navigator>
     </>
 }
-
-const styles = StyleSheet.create({
-    containerCesta: {
-      flex: 4,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-    },
-    cardMenu: {
-        flex: 1,
-        backgroundColor: '#77b885',
-        flexDirection: 'row',
-        width: '90%',
-        top: -15,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingLeft: 20,
-        paddingEnd: 20,
-    },
-    cards: {
-        flex: 7,
-        width: '100%',
-        alignItems: 'center',
-    },
-    texto:{
-        fontSize: 17,
-        color: '#fff',
-    },
-    card:{
-        position: 'relative',
-        borderColor: '#80b3ff',
-        width: '94%',
-        borderWidth: 2,
-        minHeight: 70,
-        borderRadius: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingLeft: 10,
-        paddingRight: 10,
-        justifyContent: 'space-between',
-        marginBottom: 10,
-        marginTop: 25
-    },
-    fundoIconce:{
-      backgroundColor: '#80b3ff',
-      width: 50,
-      height: 50,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: 10
-    },
-    tituloCard:{
-        fontWeight: 'bold',
-        fontSize: 15
-    },
-    cardData:{
-        flexDirection: 'row'
-    },
-    textoData:{
-        fontWeight: 'bold',
-        fontSize: 12
-    },
-    view: {
-        width: '92%',
-        alignItems: "center"
-    },
-    textoDatinha:{
-        fontSize: 12
-    },
-    status:{
-        position: 'absolute',
-        top: -23,
-        right: -5,
-        color: 'white',
-        backgroundColor: '#77b885',
-        minWidth: 70,
-        height: 30,
-        padding: 5,
-        alignItems: 'center',
-        borderRadius: 10
-    }
-  });
