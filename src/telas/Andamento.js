@@ -8,7 +8,7 @@ import MenuTop from "./MenuTop";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { db } from "../../firebase";
 
-export default function Historico({userData}){
+export default function Andamento({userData}){
     const Tab = createBottomTabNavigator();
     const route = useRoute()
     const [atividades, setAtividade] = useState('')
@@ -39,7 +39,7 @@ export default function Historico({userData}){
        
         async function tempoRealX(){
             setLoading(true)
-            const ativi = await api.get('celular/historico/'+userData.user).then((val)=>{ 
+            const ativi = await api.get('celular/andamento/'+userData.user).then((val)=>{ 
                 // var tempoSet = setTimeout(function () { tempoRealX() }, 2000); 
                 return {atividades: val.data};
             }).catch((error)=>{
@@ -81,7 +81,8 @@ export default function Historico({userData}){
                         conteudo['servico'] = atividades[item].nome     
                         conteudo['data'] = atividades[item].hora     
                         conteudo['empresa'] = atividades[item].empresa     
-                        conteudo['id'] = atividades[item].id     
+                        conteudo['id'] = atividades[item].id
+                        conteudo['user'] = userData.user       
                         conteudo['route'] = route.name     
                         return <TouchableOpacity onPress={()=>{navigation.navigate('Resumo', {conteudo});}} key={atividades[item].id} style={[styles.card, {borderColor: atividades[item].cor}]}>
                                 <View style={[styles.fundoIconce, {backgroundColor: atividades[item].cor}]}>
@@ -99,7 +100,7 @@ export default function Historico({userData}){
                                     </View>
                                 </View>
                             </TouchableOpacity>
-                        }) : <Text>Nenhuma tarefa no seu historico.</Text>
+                        }) : <Text>Nenhuma tarefa em andamento.</Text>
                     }
                 </ScrollView>
             </View>

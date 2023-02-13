@@ -5,10 +5,13 @@ import api from "../servicos/axios";
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import Lista from "./Lista";
+import { db } from "../../firebase";
+import { firebases } from "../../firebase";
 
 export default function Resumotarefa(){
     const navigation = useNavigation();
     const refInput = useRef(false);
+    const route = useRoute()
 
     const [botoes, setBotoes] = useState(()=>{
         return <>
@@ -24,38 +27,76 @@ export default function Resumotarefa(){
     })
 
     useEffect(()=>{
-        navigation.addListener('beforeRemove', (e) => {
-            const action = e.data.action;
-            if (!refInput.current) {
-              return
-            }
+        navigation.addListener('focus', (e) => {
+               if(route.params.conteudo.route === 'Andamento'){
+                iniciarTarefa()
+               } else if(route.params.conteudo.route === 'Historico'){
+                    setBotoes(()=>{
+                        return <>    
+                        </>
+                    })
+               }
+         })
+        // navigation.addListener('beforeRemove', (e) => {
+        //     const action = e.data.action;
+        //     if (!refInput.current) {
+        //       return
+        //     }
     
-            e.preventDefault();
+        //     e.preventDefault();
     
-            Alert.alert(
-              'Tarefa em andamento',
-              'Só pode voltar depois que concluir a tarefa.',
-              [
-                { text: "Voltar", style: 'cancel', onPress: () => {} },
-              ]
-            );
-        })
+        //     Alert.alert(
+        //       'Tarefa em andamento',
+        //       'Só pode voltar depois que concluir a tarefa.',
+        //       [
+        //         { text: "Voltar", style: 'cancel', onPress: () => {} },
+        //       ]
+        //     );
+        // })
     },[])
 
 
   async function iniciarTarefa(){
         refInput.current = true
-        const ativi = await api.post('celular/tarefa',{
-            id: route.params.conteudo.id,
-            idVerifica: '1',
-            empresa: route.params.conteudo.empresa,
-            usuario: route.params.conteudo.user,
-        }).then((val)=>{
+        if(route.params.conteudo.route != 'Andamento'){
 
-            if(val.data == 1){
-                Alert.alert('Tarefa em andamento ...')
-            }
+            db.collection('concierge_tarefas').add({
+                id: route.params.conteudo.id,
+                status: '1',
+                numero_atendimento: route.params.conteudo.numero_atendimento,
+                timestamp: firebases.firestore.FieldValue.serverTimestamp()
+              })
 
+            const ativi = await api.post('celular/tarefa',{
+                id: route.params.conteudo.id,
+                idVerifica: '1',
+                empresa: route.params.conteudo.empresa,
+                usuario: route.params.conteudo.user,
+            }).then((val)=>{
+    
+                if(val.data == 1){
+                    Alert.alert('Tarefa em andamento ...')
+                }
+    
+                setBotoes(()=>{
+                    return <>
+                <TouchableOpacity style={{flexDirection: 'row', justifyContent: 'space-around', width: '100%'}} onPress={()=> concluirTarefa()}>
+                    <View  style={[style.botao, {backgroundColor: '#ecc039'}]}> 
+                        <Feather name="check" size={23} color={'white'}></Feather>
+                        <Text style={{color: 'white', fontSize: 15, fontWeight: 'bold'}}>Concluir tarefa</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=> cancelarTarefa()}>
+                     <View  style={[style.botao, {backgroundColor: '#de4c45'}]}> 
+                        <Feather name="x" size={23} color={'white'}></Feather>
+                        <Text style={{color: 'white', fontSize: 15, fontWeight: 'bold'}}>Cancelar tarefa</Text>
+                    </View>    
+                </TouchableOpacity> 
+                    
+                    </>
+                })
+            }).catch((error)=> console.log(error))
+        }else{
             setBotoes(()=>{
                 return <>
             <TouchableOpacity style={{flexDirection: 'row', justifyContent: 'space-around', width: '100%'}} onPress={()=> concluirTarefa()}>
@@ -73,10 +114,17 @@ export default function Resumotarefa(){
                 
                 </>
             })
-        }).catch((error)=> console.log(error))
+        }
+        
     }
 
     async function concluirTarefa(){
+        db.collection('concierge_tarefas').add({
+            id: route.params.conteudo.id,
+            status: '4',
+            numero_atendimento: route.params.conteudo.numero_atendimento,
+            timestamp: firebases.firestore.FieldValue.serverTimestamp()
+          })
         refInput.current = false
         const ativi = await api.post('celular/tarefa',{
             id: route.params.conteudo.id,
@@ -100,6 +148,12 @@ export default function Resumotarefa(){
     }
 
     async function cancelarTarefa(){
+        db.collection('concierge_tarefas').add({
+            id: route.params.conteudo.id,
+            status: '2',
+            numero_atendimento: route.params.conteudo.numero_atendimento,
+            timestamp: firebases.firestore.FieldValue.serverTimestamp()
+        })
         refInput.current = false
         const ativi = await api.post('celular/tarefa',{
             id: route.params.conteudo.id,
@@ -121,7 +175,6 @@ export default function Resumotarefa(){
         }).catch((error)=> console.log(error))
     }
 
-    const route = useRoute()
 
     return <>
     <View style={style.container}>

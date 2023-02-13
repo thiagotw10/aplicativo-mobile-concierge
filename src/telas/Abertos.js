@@ -6,6 +6,7 @@ import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import MenuTop from "./MenuTop";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { db } from "../../firebase";
 
 
 export default function Abertos({userData}){
@@ -18,20 +19,42 @@ const [loading, setLoading] = useState('')
 const navigation = useNavigation();
 
     useEffect(()=>{
-        navigation.addListener('focus', (e) => {
-           return tempoReal()
+        let change = false
+        db.collection('concierge_tarefas').onSnapshot(function(){
+        if (!change) {
+            change = true
+            return
+        }
+
+        tempoReal()
+
         })
+
+        tempoReal()
+        // navigation.addListener('focus', (e) => {
+        //    return tempoReal()
+        // })
     }, [])
 
    
     async function tempoReal(){
-        const ativi = await api.get('celular/'+userData.id).then((val)=>{ var tempoSet = setTimeout(function () { tempoReal() }, 2000); return {intervalo: tempoSet, atividades: val.data};}).catch((error)=> error)
-        if(ativi.atividades.atividades != 'undefined' && ativi.atividades.atividades != '' && ativi.atividades.atividades != null){
+        setLoading(true)
+        const ativi = await api.get('celular/'+userData.id).then((val)=>{ 
+            // var tempoSet = setTimeout(function () { tempoReal() }, 2000); 
+            return {atividades: val.data};
+        })
+        .catch((error)=>{
+            console.log(error);
+            return {intervalo: '', atividades: ''};
+        })
+
+        if(ativi){
+            setLoading(false)
             setAtividade(ativi.atividades.atividades)
             setTotal(ativi.atividades.total)
            
             navigation.addListener('blur', (e) => {
-                clearInterval(ativi.intervalo)
+                // clearInterval(ativi.intervalo)
              })
 
         }
@@ -53,7 +76,7 @@ const navigation = useNavigation();
             <View style={styles.cards}>
                 <View style={styles.view}>
                     <ScrollView>
-                        {  atividades != '' && atividades != null && atividades != undefined ?
+                        { loading ? <ActivityIndicator size="large" color="#00ff00"/> : atividades != '' && atividades != null && atividades != undefined ?
                         
                             Object.keys(atividades).map((item) => {
                             let conteudo =  JSON.parse(atividades[item].conteudo)
@@ -61,7 +84,8 @@ const navigation = useNavigation();
                             conteudo['data'] = atividades[item].hora     
                             conteudo['empresa'] = atividades[item].empresa     
                             conteudo['id'] = atividades[item].id     
-                            conteudo['user'] = userData.user  
+                            conteudo['user'] = userData.user
+                            conteudo['route'] = route.name       
                             return <TouchableOpacity onPress={()=>{if((atividades[item].statusTela != '1') && (atividades[item].statusTela != '2') && (atividades[item].statusTela != '4')){navigation.navigate('Resumo', {conteudo});}}} key={atividades[item].id} style={[styles.card, {borderColor: atividades[item].cor}]}>
                                     <View style={[styles.fundoIconce, {backgroundColor: atividades[item].cor}]}>
                                         <Feather name="activity" size={30} color={'#fff'}/>
@@ -78,7 +102,7 @@ const navigation = useNavigation();
                                         </View>
                                     </View>
                                 </TouchableOpacity>
-                            }) : <Text>Nenhuma tarefa encontrada.</Text>
+                            }) : <Text>Nenhuma tarefa em aberto.</Text>
                         }
                     </ScrollView>
                 </View>

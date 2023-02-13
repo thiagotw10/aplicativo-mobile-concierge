@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Abertos from "./Abertos";
 import Historico from "./Historico";
+import Andamento from "./Andamento";
 
 
 
@@ -25,6 +26,8 @@ const route = useRoute()
           : 'book-outline';
       } else if (route.name === 'Historico') {
         iconName = focused ? 'clipboard-outline' : 'clipboard-outline';
+      } else if (route.name === 'Andamento'){
+        iconName = focused ? 'speedometer-outline' : 'speedometer-outline';
       }
 
       // You can return any component that you like here!
@@ -35,6 +38,7 @@ const route = useRoute()
   })}
    >
         <Tab.Screen options={{headerShown: false}} name="Abertos" children={() => <Abertos userData={route.params} />} />
+        <Tab.Screen options={{headerShown: false}} name="Andamento" children={() => <Andamento userData={route.params} />} />
         <Tab.Screen options={{headerShown: false}} name="Historico" children={() => <Historico userData={route.params} />} />
     </Tab.Navigator>
     </>
